@@ -27,37 +27,36 @@ ENTIDADES_PONTEVEDRA_GALICIA = [
     "vilanova de arousa"
 ]
 
-# Palabras obligatorias para asegurar que es EMPLEO y no una notificación o expediente suelto
-PALABRAS_CLAVE_EMPLEO = [
-    "oposic", "concurso", "convocatoria", "bases", "bolsa", "listaxe", "lista",
-    "prazas", "praza", "persoal", "funcionario", "laboral", "interin", "seleccion",
-    "tribunal", "admitidos", "exclu", "estabilizacion", "oferta de emprego", "oep",
-    "subgrupo", "grupo c1", "grupo c2", "escala", "cuerpo", "corpo"
+PALABRAS_EMPLEO_ESTRICTO = [
+    "oposic", "concurso", "convocatoria", "bases", "bolsa", "listaxe", "lista de espera",
+    "prazas", "praza", "funcionario", "laboral", "interin", "seleccion", "tribunal",
+    "admitidos", "exclu", "estabilizacion", "oferta de emprego", "oep", "subgrupo",
+    "grupo a1", "grupo a2", "grupo c1", "grupo c2", "escala", "cuerpo", "corpo", "promocion interna"
 ]
 
 def normalizar(texto: str) -> str:
     texto = unicodedata.normalize("NFD", texto.lower())
     return "".join(c for c in texto if unicodedata.category(c) != "Mn")
 
-def es_anuncio_de_empleo(texto: str) -> bool:
+def es_convocatoria_real(texto: str) -> bool:
     norm = normalizar(texto)
-    # Filtrar ruidos típicos de la Xunta (notificaciones de expedientes, licencias, expropiaciones)
-    ruidos = [
-        "se notifican", "notifican os actos", "autorizacion administrativa", 
-        "instalacion electrica", "expropiacion", "impacto ambiental", "concesion de auga"
+    # Filtro tajante contra multas, sanciones, expropiaciones y notificaciones de particulares
+    prohibidas = [
+        "sancionador", "multa", "notificar", "comparecencia", "expropiacion", 
+        "cultivos mariños", "autorizacion ambiental", "aguas", "impacto ambiental",
+        "concesion", "patente", "subvencion", "notificacion"
     ]
-    if any(r in norm for r in ruidos):
+    if any(p in norm for p in prohibidas):
         return False
     
-    # Debe contener al menos un término claro de empleo público
-    return any(p in norm for p in PALABRAS_CLAVE_EMPLEO)
+    return any(p in norm for p in PALABRAS_EMPLEO_ESTRICTO)
 
 def detectar_destacado(texto: str) -> str:
     norm = normalizar(texto)
-    if not es_anuncio_de_empleo(texto):
+    if not es_convocatoria_real(texto):
         return ""
     
-    if any(p in norm for p in ["auxiliar administrativo", "auxiliar administrativa", "auxiliares", "auxiliar de administracion", "auxiliar adm", "subgrupo c2", "grupo c2"]):
+    if any(p in norm for p in ["auxiliar administrativo", "auxiliar administrativa", "auxiliares", "auxiliar de administracion", "subgrupo c2", "grupo c2"]):
         return "C2 · Aux. Admin"
     
     if any(p in norm for p in ["subgrupo c1", "grupo c1", "cuerpo administrativo", "corpo administrativo", "escala administrativa", "administrativo", "administrativa"]):
@@ -119,60 +118,52 @@ def fetch_boe(fecha: datetime) -> list:
                             titulo = item.get("titulo", "")
                             norm = normalizar(titulo)
                             if any(re.search(rf"\b{re.escape(ent)}\b", norm) for ent in ENTIDADES_PONTEVEDRA_GALICIA):
-                                doc_id = item.get("identificador", "")
-                                enlace = item.get("url_html", {})
-                                if isinstance(enlace, dict):
-                                    enlace = enlace.get("#text", f"https://www.boe.es/diario_boe/txt.php?id={doc_id}")
-                                resultados.append({
-                                    "id": f"BOE-{doc_id}",
-                                    "fecha": fecha.strftime("%Y-%m-%d"),
-                                    "boletin": "BOE",
-                                    "organismo": detectar_organismo(titulo),
-                                    "titulo": titulo.strip(),
-                                    "url": enlace,
-                                    "etiqueta_destacada": detectar_destacado(titulo)
-                                })
+                                if es_convocatoria_real(titulo):
+                                    doc_id = item.get("identificador", "")
+                                    enlace = item.get("url_html", {})
+                                    if isinstance(enlace, dict):
+                                        enlace = enlace.get("#text", f"https://www.boe.es/diario_boe/txt.php?id={doc_id}")
+                                    resultados.append({
+                                        "id": f"BOE-{doc_id}",
+                                        "fecha": fecha.strftime("%Y-%m-%d"),
+                                        "boletin": "BOE",
+                                        "organismo": detectar_organismo(titulo),
+                                        "titulo": titulo.strip(),
+                                        "url": enlace,
+                                        "etiqueta_destacada": detectar_destacado(titulo)
+                                    })
     except Exception as e:
         print(f"[BOE {fecha_str}] Error: {e}")
     return resultados
 
 def fetch_dog(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y%m%d")
-    urls_indice = [
-        f"https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/{fecha.year}/{fecha_str}/Secciones3_gl.html",
-        f"https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/{fecha.year}/{fecha_str}/Secciones4_gl.html",
-    ]
+    # SOLO Sección IV (Oposiciones y concursos) del DOG. Se elimina la Sección III para evitar multas y notificaciones.
+    url = f"https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/{fecha.year}/{fecha_str}/Secciones4_gl.html"
     resultados = []
-    for url in urls_indice:
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=20)
-            if r.status_code != 200 or "No existe" in r.text or "Non existe" in r.text:
-                continue
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=20)
+        if r.status_code == 200 and "No existe" not in r.text and "Non existe" not in r.text:
             soup = BeautifulSoup(r.text, "lxml")
-            
             for a in soup.find_all("a", href=True):
                 href = a["href"]
                 titulo = " ".join(a.get_text().split())
                 if len(titulo) < 25 or ".html" not in href:
                     continue
-                
-                # Filtrar estrictamente para que solo entren anuncios que hablen de empleo
-                if not es_anuncio_de_empleo(titulo):
-                    continue
-
-                full_url = urljoin("https://www.xunta.gal/diario-oficial-galicia/", href)
-                uid = f"DOG-{fecha_str}-{abs(hash(titulo)) % 10**8}"
-                resultados.append({
-                    "id": uid,
-                    "fecha": fecha.strftime("%Y-%m-%d"),
-                    "boletin": "DOG",
-                    "organismo": detectar_organismo(titulo),
-                    "titulo": titulo,
-                    "url": full_url,
-                    "etiqueta_destacada": detectar_destacado(titulo)
-                })
-        except Exception as e:
-            print(f"[DOG {fecha_str}] Error: {e}")
+                if es_convocatoria_real(titulo):
+                    full_url = urljoin("https://www.xunta.gal/diario-oficial-galicia/", href)
+                    uid = f"DOG-{fecha_str}-{abs(hash(titulo)) % 10**8}"
+                    resultados.append({
+                        "id": uid,
+                        "fecha": fecha.strftime("%Y-%m-%d"),
+                        "boletin": "DOG",
+                        "organismo": detectar_organismo(titulo),
+                        "titulo": titulo,
+                        "url": full_url,
+                        "etiqueta_destacada": detectar_destacado(titulo)
+                    })
+    except Exception as e:
+        print(f"[DOG {fecha_str}] Error: {e}")
     return resultados
 
 def fetch_boppo(fecha: datetime) -> list:
@@ -189,7 +180,7 @@ def fetch_boppo(fecha: datetime) -> list:
             href = a["href"]
             if len(titulo) < 25:
                 continue
-            if es_anuncio_de_empleo(titulo):
+            if es_convocatoria_real(titulo):
                 full_url = urljoin("https://boppo.depo.gal", href)
                 uid = f"BOPPO-{fecha_str}-{abs(hash(titulo)) % 10**8}"
                 resultados.append({
@@ -215,7 +206,7 @@ def main():
             existentes[item["id"]] = item
 
     limite = (hoy - timedelta(days=45)).strftime("%Y-%m-%d")
-    filtrados = [v for v in existentes.values() if v["fecha"] >= limite]
+    filtrados = [v for v in existentes.values() if v["fecha"] >= limite and v.get("etiqueta_destacada") or es_convocatoria_real(v["titulo"])]
     filtrados.sort(key=lambda x: (x["fecha"], bool(x.get("etiqueta_destacada"))), reverse=True)
 
     os.makedirs("docs", exist_ok=True)
@@ -227,7 +218,7 @@ def main():
     with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, indent=2)
 
-    print(f"Guardados {len(filtrados)} anuncios limpios.")
+    print(f"Guardados {len(filtrados)} anuncios limpios de empleo.")
 
 if __name__ == "__main__":
     main()
