@@ -1,0 +1,15 @@
+{
+  "name": "Radar Oposiciones Pontevedra",
+  "short_name": "Oposiciones PO",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4da.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    }
+  ]
+}
