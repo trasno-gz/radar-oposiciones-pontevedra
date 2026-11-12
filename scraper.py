@@ -27,38 +27,44 @@ ENTIDADES_PONTEVEDRA_GALICIA = [
     "vilanova de arousa"
 ]
 
-PATRONES_EMPLEO_BOPPO = [
+# Palabras obligatorias para asegurar que es EMPLEO y no una notificación o expediente suelto
+PALABRAS_CLAVE_EMPLEO = [
     "oposic", "concurso", "convocatoria", "bases", "bolsa", "listaxe", "lista",
     "prazas", "praza", "persoal", "funcionario", "laboral", "interin", "seleccion",
-    "tribunal", "admitidos", "exclu", "estabilizacion", "oferta de emprego", "oep"
+    "tribunal", "admitidos", "exclu", "estabilizacion", "oferta de emprego", "oep",
+    "subgrupo", "grupo c1", "grupo c2", "escala", "cuerpo", "corpo"
 ]
-
-# Detecta tanto Auxiliar Administrativo (C2) como Administrativo (C1)
-PATRONES_DESTACADOS = [
-    "auxiliar administrativo", "auxiliar administrativa", "auxiliares administrativos",
-    "auxiliares administrativas", "auxiliar de administracion", "auxiliar adm",
-    "subgrupo c2", "grupo c2",
-    "administrativo", "administrativa", "administrativos", "administrativas",
-    "subgrupo c1", "grupo c1", "cuerpo administrativo", "corpo administrativo",
-    "escala administrativa"
-]
-
 
 def normalizar(texto: str) -> str:
     texto = unicodedata.normalize("NFD", texto.lower())
     return "".join(c for c in texto if unicodedata.category(c) != "Mn")
 
+def es_anuncio_de_empleo(texto: str) -> bool:
+    norm = normalizar(texto)
+    # Filtrar ruidos típicos de la Xunta (notificaciones de expedientes, licencias, expropiaciones)
+    ruidos = [
+        "se notifican", "notifican os actos", "autorizacion administrativa", 
+        "instalacion electrica", "expropiacion", "impacto ambiental", "concesion de auga"
+    ]
+    if any(r in norm for r in ruidos):
+        return False
+    
+    # Debe contener al menos un término claro de empleo público
+    return any(p in norm for p in PALABRAS_CLAVE_EMPLEO)
 
 def detectar_destacado(texto: str) -> str:
     norm = normalizar(texto)
+    if not es_anuncio_de_empleo(texto):
+        return ""
+    
     if any(p in norm for p in ["auxiliar administrativo", "auxiliar administrativa", "auxiliares", "auxiliar de administracion", "auxiliar adm", "subgrupo c2", "grupo c2"]):
         return "C2 · Aux. Admin"
+    
     if any(p in norm for p in ["subgrupo c1", "grupo c1", "cuerpo administrativo", "corpo administrativo", "escala administrativa", "administrativo", "administrativa"]):
-        # Evitar falsos positivos si solo dice "procedimiento administrativo" o "contencioso-administrativo"
-        if "procedimiento administrativo" not in norm and "procedemento administrativo" not in norm and "contencioso" not in norm:
+        if "procedimiento administrativo" not in norm and "procedemento administrativo" not in norm:
             return "C1 · Administrativo"
+            
     return ""
-
 
 def detectar_organismo(texto: str) -> str:
     norm = normalizar(texto)
@@ -72,13 +78,11 @@ def detectar_organismo(texto: str) -> str:
                 return f"Concello de {entidad.title()}"
     return "Administración Pública"
 
-
 def cargar_historico() -> list:
     if os.path.exists(DATA_PATH):
         with open(DATA_PATH, "r", encoding="utf-8") as f:
             return json.load(f).get("items", [])
     return []
-
 
 def fetch_boe(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y%m%d")
@@ -132,7 +136,6 @@ def fetch_boe(fecha: datetime) -> list:
         print(f"[BOE {fecha_str}] Error: {e}")
     return resultados
 
-
 def fetch_dog(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y%m%d")
     urls_indice = [
@@ -146,15 +149,15 @@ def fetch_dog(fecha: datetime) -> list:
             if r.status_code != 200 or "No existe" in r.text or "Non existe" in r.text:
                 continue
             soup = BeautifulSoup(r.text, "lxml")
-            es_sec_iv = "Secciones4" in url
-
+            
             for a in soup.find_all("a", href=True):
                 href = a["href"]
                 titulo = " ".join(a.get_text().split())
                 if len(titulo) < 25 or ".html" not in href:
                     continue
-                norm = normalizar(titulo)
-                if not es_sec_iv and not any(p in norm for p in ["oposic", "concurso", "bases", "convocatoria", "listas", "praza", "emprego"]):
+                
+                # Filtrar estrictamente para que solo entren anuncios que hablen de empleo
+                if not es_anuncio_de_empleo(titulo):
                     continue
 
                 full_url = urljoin("https://www.xunta.gal/diario-oficial-galicia/", href)
@@ -163,7 +166,7 @@ def fetch_dog(fecha: datetime) -> list:
                     "id": uid,
                     "fecha": fecha.strftime("%Y-%m-%d"),
                     "boletin": "DOG",
-                    "organismo": detectar_organismo(titulo) if detectar_organismo(titulo) != "Administración Pública" else "Xunta de Galicia",
+                    "organismo": detectar_organismo(titulo),
                     "titulo": titulo,
                     "url": full_url,
                     "etiqueta_destacada": detectar_destacado(titulo)
@@ -171,7 +174,6 @@ def fetch_dog(fecha: datetime) -> list:
         except Exception as e:
             print(f"[DOG {fecha_str}] Error: {e}")
     return resultados
-
 
 def fetch_boppo(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y-%m-%d")
@@ -187,8 +189,7 @@ def fetch_boppo(fecha: datetime) -> list:
             href = a["href"]
             if len(titulo) < 25:
                 continue
-            norm = normalizar(titulo)
-            if any(p in norm for p in PATRONES_EMPLEO_BOPPO):
+            if es_anuncio_de_empleo(titulo):
                 full_url = urljoin("https://boppo.depo.gal", href)
                 uid = f"BOPPO-{fecha_str}-{abs(hash(titulo)) % 10**8}"
                 resultados.append({
@@ -203,7 +204,6 @@ def fetch_boppo(fecha: datetime) -> list:
     except Exception as e:
         print(f"[BOPPO {fecha_str}] Error: {e}")
     return resultados
-
 
 def main():
     existentes = {item["id"]: item for item in cargar_historico()}
@@ -227,8 +227,7 @@ def main():
     with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, indent=2)
 
-    print(f"Guardados {len(filtrados)} anuncios.")
-
+    print(f"Guardados {len(filtrados)} anuncios limpios.")
 
 if __name__ == "__main__":
     main()
