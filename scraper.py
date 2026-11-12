@@ -40,7 +40,6 @@ def normalizar(texto: str) -> str:
 
 def es_convocatoria_real(texto: str) -> bool:
     norm = normalizar(texto)
-    # Filtro tajante contra multas, sanciones, expropiaciones y notificaciones de particulares
     prohibidas = [
         "sancionador", "multa", "notificar", "comparecencia", "expropiacion", 
         "cultivos mariños", "autorizacion ambiental", "aguas", "impacto ambiental",
@@ -48,21 +47,17 @@ def es_convocatoria_real(texto: str) -> bool:
     ]
     if any(p in norm for p in prohibidas):
         return False
-    
     return any(p in norm for p in PALABRAS_EMPLEO_ESTRICTO)
 
 def detectar_destacado(texto: str) -> str:
     norm = normalizar(texto)
     if not es_convocatoria_real(texto):
         return ""
-    
     if any(p in norm for p in ["auxiliar administrativo", "auxiliar administrativa", "auxiliares", "auxiliar de administracion", "subgrupo c2", "grupo c2"]):
         return "C2 · Aux. Admin"
-    
     if any(p in norm for p in ["subgrupo c1", "grupo c1", "cuerpo administrativo", "corpo administrativo", "escala administrativa", "administrativo", "administrativa"]):
         if "procedimiento administrativo" not in norm and "procedemento administrativo" not in norm:
             return "C1 · Administrativo"
-            
     return ""
 
 def detectar_organismo(texto: str) -> str:
@@ -77,11 +72,14 @@ def detectar_organismo(texto: str) -> str:
                 return f"Concello de {entidad.title()}"
     return "Administración Pública"
 
-def cargar_historico() -> list:
+def cargar_historico() -> dict:
     if os.path.exists(DATA_PATH):
         with open(DATA_PATH, "r", encoding="utf-8") as f:
-            return json.load(f).get("items", [])
-    return []
+            datos = json.load(f)
+            items = datos.get("items", [])
+            # Usar un diccionario con clave única basada en URL o título normalizado para evitar duplicados absolutos
+            return {item.get("url", item["id"]): item for item in items}
+    return {}
 
 def fetch_boe(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y%m%d")
@@ -138,7 +136,6 @@ def fetch_boe(fecha: datetime) -> list:
 
 def fetch_dog(fecha: datetime) -> list:
     fecha_str = fecha.strftime("%Y%m%d")
-    # SOLO Sección IV (Oposiciones y concursos) del DOG. Se elimina la Sección III para evitar multas y notificaciones.
     url = f"https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/{fecha.year}/{fecha_str}/Secciones4_gl.html"
     resultados = []
     try:
@@ -197,16 +194,27 @@ def fetch_boppo(fecha: datetime) -> list:
     return resultados
 
 def main():
-    existentes = {item["id"]: item for item in cargar_historico()}
+    existentes = cargar_historico()
     hoy = datetime.now()
 
+    # Escanear los últimos 5 días
     for offset in range(5):
         dia = hoy - timedelta(days=offset)
         for item in fetch_boe(dia) + fetch_dog(dia) + fetch_boppo(dia):
-            existentes[item["id"]] = item
+            # Usar la URL como clave única para evitar duplicados exactos
+            clave_unica = item["url"]
+            if clave_unica not in existentes or existentes[clave_unica]["fecha"] < item["fecha"]:
+                existentes[clave_unica] = item
 
     limite = (hoy - timedelta(days=45)).strftime("%Y-%m-%d")
-    filtrados = [v for v in existentes.values() if v["fecha"] >= limite and v.get("etiqueta_destacada") or es_convocatoria_real(v["titulo"])]
+    
+    # Filtrar por fecha límite y asegurar que sean de empleo real
+    filtrados = [
+        v for v in existentes.values() 
+        if v["fecha"] >= limite and (v.get("etiqueta_destacada") or es_convocatoria_real(v["titulo"]))
+    ]
+    
+    # Ordenar por fecha descendente
     filtrados.sort(key=lambda x: (x["fecha"], bool(x.get("etiqueta_destacada"))), reverse=True)
 
     os.makedirs("docs", exist_ok=True)
@@ -218,7 +226,7 @@ def main():
     with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, indent=2)
 
-    print(f"Guardados {len(filtrados)} anuncios limpios de empleo.")
+    print(f"Guardados {len(filtrados)} anuncios únicos y limpios de empleo.")
 
 if __name__ == "__main__":
     main()
