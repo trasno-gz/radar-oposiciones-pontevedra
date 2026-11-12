@@ -65,6 +65,12 @@
     .item a { color: var(--text); text-decoration: none; font-size: 0.98rem; line-height: 1.4; display: block; }
     .item a:hover { color: var(--accent); text-decoration: underline; }
     .empty { text-align: center; color: var(--muted); padding: 2.5rem; }
+    
+    /* Estilo para las convocatorias ya vistas */
+    .leida, .leida a {
+      opacity: 0.5;
+      filter: grayscale(40%);
+    }
   </style>
 </head>
 <body>
@@ -158,6 +164,13 @@
       onlyAux = !onlyAux;
       e.currentTarget.classList.toggle("active", onlyAux);
       render();
+    });
+
+    // Marcar como leídas las ofertas al hacer clic en ellas
+    document.addEventListener("click", function(e) {
+      if (e.target.tagName === "A" && e.target.href) {
+        e.target.closest(".item")?.classList.add("leida");
+      }
     });
 
     init();
