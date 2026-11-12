@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Empleo Público · Pontevedra y Xunta</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --aux-bg: rgba(245, 158, 11, 0.14);
+      --aux-border: #f59e0b;
+      --aux-text: #fbbf24;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 1.25rem; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+    h1 { font-size: 1.45rem; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .quick-links { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .quick-links a {
+      background: #1e293b; border: 1px solid var(--border); color: var(--accent);
+      text-decoration: none; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.82rem;
+    }
+    .controls {
+      display: grid; grid-template-columns: 1fr auto; gap: 0.75rem;
+      background: var(--card); padding: 1rem; border-radius: 10px;
+      border: 1px solid var(--border); margin-bottom: 1.25rem;
+    }
+    input[type="search"] {
+      width: 100%; padding: 0.65rem 0.9rem; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.95rem;
+    }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; grid-column: 1 / -1; align-items: center; }
+    button {
+      background: var(--bg); color: var(--text); border: 1px solid var(--border);
+      padding: 0.45rem 0.85rem; border-radius: 7px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    }
+    button.active { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 700; }
+    button.aux-btn { border-color: var(--aux-border); color: var(--aux-text); }
+    button.aux-btn.active { background: var(--aux-border); color: #0f172a; }
+    .list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .item {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem; transition: transform 0.1s;
+    }
+    .item.is-aux {
+      background: linear-gradient(90deg, var(--aux-bg), var(--card) 45%);
+      border-left: 4px solid var(--aux-border);
+    }
+    .item-top { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; font-size: 0.8rem; }
+    .badge { padding: 0.18rem 0.55rem; border-radius: 5px; font-weight: 700; }
+    .badge-DOG { background: #0284c7; color: #fff; }
+    .badge-BOPPO { background: #059669; color: #fff; }
+    .badge-BOE { background: #dc2626; color: #fff; }
+    .badge-AUX { background: var(--aux-border); color: #0f172a; }
+    .org { color: #cbd5e1; font-weight: 600; }
+    .date { color: var(--muted); margin-left: auto; }
+    .item a { color: var(--text); text-decoration: none; font-size: 0.98rem; line-height: 1.4; display: block; }
+    .item a:hover { color: var(--accent); text-decoration: underline; }
+    .empty { text-align: center; color: var(--muted); padding: 2.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Radar Empleo Público · Pontevedra y Xunta</h1>
+        <div class="meta" id="status">Cargando convocatorias...</div>
+      </div>
+      <div class="quick-links">
+        <a href="https://www.depo.gal/es/emprego-publico-da-provincia-de-pontevedra" target="_blank">Portal Depo.gal ↗</a>
+        <a href="https://funcionpublica.xunta.gal/es/procesos-selectivos" target="_blank">Función Pública Xunta ↗</a>
+      </div>
+    </header>
+
+    <div class="controls">
+      <input type="search" id="search" placeholder="Filtrar por concello, puesto, bolsa, grupo (ej: Pontevedra, economía, Vigo, C1, C2)..." />
+      <div class="filters">
+        <button class="active" data-boletin="ALL">Todos (<span id="count-all">0</span>)</button>
+        <button data-boletin="BOPPO">BOPPO · Concellos/Depo</button>
+        <button data-boletin="DOG">DOG · Xunta/Local</button>
+        <button data-boletin="BOE">BOE · Plazos Abiertos</button>
+        <button class="aux-btn" id="toggle-aux">★ Destacadas C1 / C2 Admin (<span id="count-aux">0</span>)</button>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+  </div>
+
+  <script>
+    let allItems = [];
+    let boletinFilter = "ALL";
+    let onlyAux = false;
+
+    async function init() {
+      try {
+        const res = await fetch("data.json?t=" + Date.now());
+        const data = await res.json();
+        allItems = data.items || [];
+        document.getElementById("status").textContent = `Última actualización: ${data.actualizado} · ${allItems.length} anuncios (últimos 45 días)`;
+        document.getElementById("count-all").textContent = allItems.length;
+        document.getElementById("count-aux").textContent = allItems.filter(i => i.etiqueta_destacada).length;
+        render();
+      } catch (e) {
+        document.getElementById("status").textContent = "Aún no se ha ejecutado el robot por primera vez.";
+      }
+    }
+
+    function render() {
+      const q = document.getElementById("search").value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const filtered = allItems.filter(item => {
+        if (boletinFilter !== "ALL" && item.boletin !== boletinFilter) return false;
+        if (onlyAux && !item.etiqueta_destacada) return false;
+        if (q) {
+          const hay = (item.titulo + " " + item.organismo + " " + (item.etiqueta_destacada || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const list = document.getElementById("list");
+      if (!filtered.length) {
+        list.innerHTML = `<div class="empty">No hay convocatorias que coincidan con el filtro actual.</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(item => `
+        <article class="item ${item.etiqueta_destacada ? "is-aux" : ""}">
+          <div class="item-top">
+            <span class="badge badge-${item.boletin}">${item.boletin}</span>
+            ${item.etiqueta_destacada ? `<span class="badge badge-AUX">★ ${item.etiqueta_destacada}</span>` : ""}
+            <span class="org">${item.organismo}</span>
+            <span class="date">${item.fecha}</span>
+          </div>
+          <a href="${item.url}" target="_blank" rel="noopener">${item.titulo}</a>
+        </article>
+      `).join("");
+    }
+
+    document.getElementById("search").addEventListener("input", render);
+    document.querySelectorAll("[data-boletin]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-boletin]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        boletinFilter = btn.dataset.boletin;
+        render();
+      });
+    });
+
+    document.getElementById("toggle-aux").addEventListener("click", (e) => {
+      onlyAux = !onlyAux;
+      e.currentTarget.classList.toggle("active", onlyAux);
+      render();
+    });
+
+    init();
+  </script>
+</body>
+</html>
