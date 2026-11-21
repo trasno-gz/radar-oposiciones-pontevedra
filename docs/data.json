@@ -1,7 +1,16 @@
 {
-  "actualizado": "20/11/2026 13:44",
-  "total": 122,
+  "actualizado": "21/11/2026 08:30",
+  "total": 123,
   "items": [
+    {
+      "id": "BOE-BOE-A-2026-24470",
+      "fecha": "2026-11-21",
+      "boletin": "BOE",
+      "organismo": "Concello de Pontevedra",
+      "titulo": "Resolución de 17 de noviembre de 2026, del Ayuntamiento de Portas (Pontevedra), referente a la convocatoria para proveer una plaza.",
+      "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-24470",
+      "etiqueta_destacada": ""
+    },
     {
       "id": "DOG-20261120-98839664",
       "fecha": "2026-11-20",
