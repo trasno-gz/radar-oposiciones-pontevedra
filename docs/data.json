@@ -1,7 +1,61 @@
 {
-  "actualizado": "23/11/2026 13:51",
-  "total": 125,
+  "actualizado": "24/11/2026 08:46",
+  "total": 131,
   "items": [
+    {
+      "id": "BOE-BOE-A-2026-24671",
+      "fecha": "2026-11-24",
+      "boletin": "BOE",
+      "organismo": "Concello de Gondomar",
+      "titulo": "Resolución de 18 de noviembre de 2026, del Ayuntamiento de Gondomar (Pontevedra), referente a la convocatoria para proveer una plaza.",
+      "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-24671",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261124-28339678",
+      "fecha": "2026-11-24",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "IV. Oposicións e concursos",
+      "url": "https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/2026/20261124/Secciones3_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261124-37191934",
+      "fecha": "2026-11-24",
+      "boletin": "DOG",
+      "organismo": "Xunta de Galicia",
+      "titulo": "ANUNCIO do 3 de novembro de 2026, da Dirección Xeral de Emprego Público e Administración de Persoal, polo que se emprazan os interesados no recurso PO 722/26, en relación co proceso selectivo extraordinario de estabilización, pola quenda de acceso libre e mediante o sistema de concurso, para o ingreso na agrupación profesional de persoal funcionario da Xunta de Galicia, na escala de persoal subalterno da Xunta de Galicia e na escala de limpeza e recursos naturais e forestais da Xunta de Galicia, e para o ingreso nas categorías 10B, 10C, 14 e 14 A do grupo V de persoal laboral da Xunta de Galicia.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261124/AnuncioG0597-101126-0001_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261124-63353236",
+      "fecha": "2026-11-24",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO do 12 de novembro de 2026 de emprazamento para o trámite de audiencia ditado no expediente de reposición da legalidade urbanística PO-0526-2025.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261124/AnuncioG1096-161126-0003_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261124-21126129",
+      "fecha": "2026-11-24",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "RESOLUCIÓN do 17 de novembro de 2026, da Comisión Provincial de Vivenda de Ourense, de inicio do proceso de selección de persoas adxudicatarias, en réxime de alugueiro, para 64 vivendas de promoción pública do expediente OU-2023/010 de Cambedo da Raia, no concello de Ourense.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261124/AnuncioC3Q2-191126-0004_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261124-47202552",
+      "fecha": "2026-11-24",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO da convocatoria da asemblea xeral ordinaria.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261124/AnuncioG0989-031126-1_gl.html",
+      "etiqueta_destacada": ""
+    },
     {
       "id": "BOPPO-2026-11-23-69501008",
       "fecha": "2026-11-23",
