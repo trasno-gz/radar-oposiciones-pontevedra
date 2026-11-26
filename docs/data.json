@@ -1,7 +1,88 @@
 {
-  "actualizado": "25/11/2026 13:49",
-  "total": 144,
+  "actualizado": "26/11/2026 08:48",
+  "total": 153,
   "items": [
+    {
+      "id": "DOG-20261126-1588801",
+      "fecha": "2026-11-26",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO de nomeamento de funcionarios de carreira na categoría de policía, escala básica do corpo de policía local, grupo C1.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261126/AnuncioL206-041126-0001_gl.html",
+      "etiqueta_destacada": "C1 · Administrativo"
+    },
+    {
+      "id": "DOG-20261126-4499819",
+      "fecha": "2026-11-26",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "IV. Oposicións e concursos",
+      "url": "https://www.xunta.gal/diario-oficial-galicia/mostrarContenido.do?paginaCompleta=false&idEstado=5&rutaRelativa=true&ruta=/2026/20261126/Secciones3_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261126-83420678",
+      "fecha": "2026-11-26",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO da convocatoria e bases reguladoras para a cobertura en propiedade por persoal funcionario de carreira, en quenda libre, dunha praza de arquitecto técnico, incluída na oferta de emprego público de 2024.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261126/AnuncioL119-051126-0003_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261126-57112723",
+      "fecha": "2026-11-26",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO de corrección de erros no nomeamento dun funcionario de carreira.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261126/AnuncioL129-221026-0001_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "DOG-20261126-84176676",
+      "fecha": "2026-11-26",
+      "boletin": "DOG",
+      "organismo": "Administración Pública",
+      "titulo": "ANUNCIO de nomeamento de persoal funcionario.",
+      "url": "https://www.xunta.gal/dog/Publicados/2026/20261126/AnuncioL375-201126-0001_gl.html",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "BOPPO-2026-11-26-78896929",
+      "fecha": "2026-11-26",
+      "boletin": "BOPPO",
+      "organismo": "Concello de Barro",
+      "titulo": "CONVOCATORIA PARA A ELECCIÓN DE XUÍZ/A DE PAZ TITULAR E XUÍZ/A DE PAZ SUBSTITUTO/A DO CONCELLO DE BARRO",
+      "url": "https://boppo.depo.gal/web/boppo/detalle/-/boppo/2026/11/26/2026081165",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "BOPPO-2026-11-26-11911789",
+      "fecha": "2026-11-26",
+      "boletin": "BOPPO",
+      "organismo": "Administración Pública",
+      "titulo": "BASES DO CONCURSO DE NOVOS INTÉRPRETES \"JORGE DOMINGUEZ\"",
+      "url": "https://boppo.depo.gal/web/boppo/detalle/-/boppo/2026/11/26/2026081170",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "BOPPO-2026-11-26-82102234",
+      "fecha": "2026-11-26",
+      "boletin": "BOPPO",
+      "organismo": "Concello de Oia",
+      "titulo": "CONVOCATORIA DO PROCEDEMENTO PÚBLICO PARA ADXUDICACIÓN DE DEREITOS FUNERARIOS SOBRE UNIDADES DE ENTERRAMENTO (NICHOS) DO CEMITERIO MUNICIPAL DE OIA",
+      "url": "https://boppo.depo.gal/web/boppo/detalle/-/boppo/2026/11/26/2026081111",
+      "etiqueta_destacada": ""
+    },
+    {
+      "id": "BOPPO-2026-11-26-57712400",
+      "fecha": "2026-11-26",
+      "boletin": "BOPPO",
+      "organismo": "Administración Pública",
+      "titulo": "APROBACIÓN DA LISTA PROVISIONAL DE ADMITIDOS E EXCLUÍDOS PROCESO SELECTIVO PARA O ACCESO POR CONCURSO-OPOSICIÓN Á PRAZA DE FUNCIONARIO DE CARREIRA DE TRABALLADOR/A SOCIAL",
+      "url": "https://boppo.depo.gal/web/boppo/detalle/-/boppo/2026/11/26/2026081103",
+      "etiqueta_destacada": ""
+    },
     {
       "id": "DOG-20261125-21530545",
       "fecha": "2026-11-25",
